@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { Suspense, useEffect, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -170,11 +170,59 @@ function FilterControls({
 }
 
 // ---------------------------------------------------------------------------
-// Page Component
+// Skeleton loader
+// ---------------------------------------------------------------------------
+function ProductsSkeleton() {
+  return (
+    <main className="min-h-screen bg-pearl-warm selection:bg-gold/20">
+      <Navbar />
+      <div className="mx-auto max-w-7xl px-4 pt-32 pb-24 sm:px-6 lg:px-8">
+        {/* Header skeleton */}
+        <div className="mb-12 text-center">
+          <div className="mx-auto mb-4 h-10 w-72 animate-pulse rounded-lg bg-charcoal/5" />
+          <div className="mx-auto h-5 w-80 animate-pulse rounded-lg bg-charcoal/5" />
+        </div>
+
+        <div className="flex gap-12">
+          {/* Sidebar skeleton (desktop) */}
+          <aside className="hidden w-64 flex-shrink-0 space-y-6 lg:block">
+            <div className="h-12 w-full animate-pulse rounded-full bg-charcoal/5" />
+            <div className="h-8 w-full animate-pulse rounded-lg bg-charcoal/5" />
+            <div className="flex flex-wrap gap-2">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-8 w-20 animate-pulse rounded-full bg-charcoal/5" />
+              ))}
+            </div>
+          </aside>
+
+          {/* Grid skeleton */}
+          <div className="flex-1">
+            <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="overflow-hidden rounded-lg border border-gold/10 bg-[#FFFDF8]">
+                  <div className="aspect-[3/4] w-full animate-pulse bg-charcoal/5" />
+                  <div className="space-y-3 p-4">
+                    <div className="h-4 w-16 animate-pulse rounded bg-charcoal/5" />
+                    <div className="h-5 w-3/4 animate-pulse rounded bg-charcoal/5" />
+                    <div className="h-4 w-full animate-pulse rounded bg-charcoal/5" />
+                    <div className="h-4 w-20 animate-pulse rounded bg-charcoal/5" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Page Content (uses useSearchParams)
 // ---------------------------------------------------------------------------
 import { useSearchParams } from "next/navigation";
 
-export default function ProductsPage() {
+function ProductsContent() {
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get("category");
   
@@ -514,5 +562,16 @@ export default function ProductsPage() {
         )}
       </AnimatePresence>
     </main>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Default Export (Suspense wrapper)
+// ---------------------------------------------------------------------------
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<ProductsSkeleton />}>
+      <ProductsContent />
+    </Suspense>
   );
 }
