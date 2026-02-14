@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
 import BackToTop from "@/components/luxury/BackToTop";
+import Footer from "@/components/luxury/Footer";
+import QueryProvider from "@/providers/QueryProvider";
 
 // ---------------------------------------------------------------------------
 // Fonts
@@ -36,10 +38,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${playfair.variable} ${inter.variable} relative h-full scroll-smooth`}>
+    <html lang="en" data-scroll-behavior="smooth" className={`${playfair.variable} ${inter.variable} relative h-full scroll-smooth`}>
       <body className="relative font-[family-name:var(--font-body)] antialiased">
-        {children}
-        <BackToTop />
+        <QueryProvider>
+          {children}
+          <Footer />
+          <BackToTop />
+        </QueryProvider>
       </body>
     </html>
   );
