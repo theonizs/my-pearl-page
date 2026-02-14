@@ -1,59 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { motion } from "framer-motion";
-import { ShoppingBag } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { useCartStore } from "@/store/useCartStore";
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  imageUrl: string;
-  category: string;
-}
-
-// ---------------------------------------------------------------------------
-// Mockup Data
-// ---------------------------------------------------------------------------
-const PRODUCTS: Product[] = [
-  {
-    id: "south-sea-strand",
-    name: "South Sea Strand",
-    price: 4800,
-    imageUrl:
-      "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&q=85&auto=format",
-    category: "Necklace",
-  },
-  {
-    id: "akoya-classic",
-    name: "Akoya Classic Choker",
-    price: 2400,
-    imageUrl:
-      "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=600&q=85&auto=format",
-    category: "Necklace",
-  },
-  {
-    id: "golden-drop-earrings",
-    name: "Golden Drop Earrings",
-    price: 1200,
-    imageUrl:
-      "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&q=85&auto=format",
-    category: "Earrings",
-  },
-  {
-    id: "baroque-statement",
-    name: "Baroque Statement Ring",
-    price: 1850,
-    imageUrl:
-      "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&q=85&auto=format",
-    category: "Ring",
-  },
-];
+import { ArrowRight } from "lucide-react";
+import { categories, Category } from "@/data/categories";
 
 // ---------------------------------------------------------------------------
 // Animation variants
@@ -86,71 +37,85 @@ const cardFade = {
 };
 
 // ---------------------------------------------------------------------------
-// Product Card
+// Category Card
 // ---------------------------------------------------------------------------
-function ProductCard({ product }: { product: Product }) {
-  const addItem = useCartStore((s) => s.addItem);
-
+function CategoryCard({ category }: { category: Category }) {
   return (
-    <motion.div variants={cardFade}>
-      <Card className="group relative overflow-hidden border-0 bg-transparent shadow-none">
-        {/* Image container */}
-        <div className="relative aspect-[3/4] cursor-pointer overflow-hidden rounded-2xl bg-pearl-deep">
+    <motion.div
+      variants={cardFade}
+      whileHover="hover"
+      className="group relative h-full w-full cursor-pointer"
+    >
+      <Link href={`/products-list?category=${category.title}`}>
+        {/* ── Image Container ──────────────────────────────────────── */}
+        <div className="relative aspect-[4/5] lg:aspect-[3/4] overflow-hidden rounded-2xl bg-pearl-deep">
+          {/* Image with hover scale (desktop only via motion) */}
           <motion.div
-            whileHover={{ scale: 1.05 }}
-            transition={{ duration: 0.6, ease: EASE }}
             className="relative h-full w-full"
+            variants={{
+              hover: { scale: 1.05 },
+            }}
+            transition={{ duration: 0.6, ease: EASE }}
           >
             <Image
-              src={product.imageUrl}
-              alt={product.name}
+              src={category.image}
+              alt={category.title}
               fill
               className="object-cover"
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
             />
           </motion.div>
 
-          {/* Hover overlay with Add to Cart */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileHover={{ opacity: 1 }}
-            className="absolute inset-0 flex items-end justify-center rounded-2xl bg-gradient-to-t from-charcoal/40 via-transparent to-transparent p-6"
-          >
-            <motion.button
-              initial={{ y: 20, opacity: 0 }}
-              whileInView={{ y: 0, opacity: 1 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+          {/* Desktop-only Overlay Gradient + Content */}
+          <div className="absolute inset-0 hidden lg:flex flex-col justify-end rounded-2xl bg-gradient-to-t from-charcoal/70 via-charcoal/15 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100">
+            <motion.div
+              className="p-8"
+              variants={{
+                hover: { y: -8 },
+              }}
               transition={{ duration: 0.3, ease: EASE }}
-              onClick={() =>
-                addItem({
-                  id: product.id,
-                  name: product.name,
-                  price: product.price,
-                  image: product.imageUrl,
-                })
-              }
-              className="flex items-center gap-2 rounded-full bg-gold px-6 py-3 text-xs font-semibold uppercase tracking-[0.15em] text-white shadow-lg transition-colors duration-300 hover:bg-gold-dark"
             >
-              <ShoppingBag className="h-4 w-4" />
-              Add to Cart
-            </motion.button>
-          </motion.div>
+              <h3 className="mb-2 font-[family-name:var(--font-display)] text-2xl font-bold tracking-wide text-white">
+                {category.title}
+              </h3>
+              <p className="mb-5 max-w-[90%] text-sm leading-relaxed text-white/80">
+                {category.description}
+              </p>
+              <motion.div
+                variants={{
+                  hover: { x: 5, opacity: 1 },
+                }}
+                transition={{ duration: 0.3, ease: EASE }}
+                className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gold"
+              >
+                <span>Explore Collection</span>
+                <ArrowRight className="h-4 w-4" />
+              </motion.div>
+            </motion.div>
+          </div>
+
+          {/* Desktop-only: always-visible title at bottom */}
+          <div className="absolute bottom-0 inset-x-0 hidden lg:block bg-gradient-to-t from-charcoal/60 to-transparent p-6 group-hover:opacity-0 transition-opacity duration-300">
+            <h3 className="font-[family-name:var(--font-display)] text-xl font-bold text-white">
+              {category.title}
+            </h3>
+          </div>
         </div>
 
-        {/* Details */}
-        <CardContent className="px-1 pt-5 pb-0">
-          <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-charcoal/40">
-            {product.category}
-          </p>
-          <h3 className="mt-1 font-[family-name:var(--font-display)] text-lg font-semibold text-charcoal">
-            {product.name}
+        {/* ── Mobile / Tablet Content (below image) ────────────────── */}
+        <div className="mt-5 space-y-2 lg:hidden">
+          <h3 className="font-[family-name:var(--font-display)] text-xl font-bold tracking-wide text-charcoal">
+            {category.title}
           </h3>
-          <p className="mt-1 text-sm font-medium text-gold">
-            ${product.price.toLocaleString()}
+          <p className="line-clamp-2 text-sm leading-relaxed text-charcoal/60">
+            {category.description}
           </p>
-        </CardContent>
-      </Card>
+          <div className="flex items-center gap-2 pt-1 text-xs font-bold uppercase tracking-widest text-gold transition-colors group-hover:text-gold/80">
+            <span>Explore Collection</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </div>
+        </div>
+      </Link>
     </motion.div>
   );
 }
@@ -181,21 +146,20 @@ export default function FeaturedCollection() {
             Curated Elegance
           </h2>
           <p className="mx-auto mt-5 max-w-lg text-base leading-relaxed text-charcoal/50">
-            Each piece is a testament to nature&apos;s artistry, perfected by
-            generations of master craftsmen.
+            Discover our exclusive categories, each piece a testament to nature&apos;s artistry and timeless design.
           </p>
         </motion.div>
 
-        {/* Product grid */}
+        {/* Categories grid */}
         <motion.div
           variants={gridStagger}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-60px" }}
-          className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4"
+          className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4 lg:gap-6"
         >
-          {PRODUCTS.map((product) => (
-            <ProductCard key={product.id} product={product} />
+          {categories.map((category) => (
+            <CategoryCard key={category.id} category={category} />
           ))}
         </motion.div>
       </div>

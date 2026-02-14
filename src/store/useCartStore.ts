@@ -18,11 +18,13 @@ export interface CartItem {
 
 export interface CartState {
   items: CartItem[];
-  addItem: (item: Omit<CartItem, "quantity">) => void;
+  addItem: (item: Omit<CartItem, "quantity">, quantity?: number) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
   // ย้ายการคำนวณมาเป็น State เพื่อให้เรียกใช้ง่ายและ Performance ดีกว่า
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
 }
 
 export const useCartStore = create<CartState>()(
@@ -30,17 +32,17 @@ export const useCartStore = create<CartState>()(
     (set) => ({
       items: [],
 
-      addItem: (item) =>
+      addItem: (item, quantity = 1) =>
         set((state) => {
           const existing = state.items.find((i) => i.id === item.id);
           if (existing) {
             return {
               items: state.items.map((i) =>
-                i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+                i.id === item.id ? { ...i, quantity: i.quantity + quantity } : i
               ),
             };
           }
-          return { items: [...state.items, { ...item, quantity: 1 }] };
+          return { items: [...state.items, { ...item, quantity }] };
         }),
 
       removeItem: (id) =>
@@ -57,9 +59,13 @@ export const useCartStore = create<CartState>()(
         })),
 
       clearCart: () => set({ items: [] }),
+
+      isOpen: false,
+      setIsOpen: (isOpen) => set({ isOpen }),
     }),
     {
-      name: env.NEXT_PUBLIC_CART_STORAGE_KEY, // ใช้ค่าที่ผ่านการ Validate แล้ว
+      name: env.NEXT_PUBLIC_CART_STORAGE_KEY,
+      partialize: (state) => ({ items: state.items }), // Don't persist isOpen state
     }
   )
 );
