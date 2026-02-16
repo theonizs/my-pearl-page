@@ -21,7 +21,7 @@ const staggerContainer = {
 };
 
 const fadeSlideUp = {
-  hidden: { opacity: 0, y: 40 },
+  hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
     y: 0,
@@ -39,6 +39,8 @@ export default function Hero() {
   const scrollToSection = useCallback((e: React.MouseEvent, sectionId: string) => {
     e.preventDefault();
     e.stopPropagation();
+    // Strict: Stop immediate propagation to prevent other listeners
+    if (e.nativeEvent) e.nativeEvent.stopImmediatePropagation();
 
     if (typeof window === "undefined") return;
 
@@ -48,7 +50,7 @@ export default function Hero() {
     const navHeight = 80;
     const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - navHeight;
 
-    smoothScrollTo(targetPosition, 1000);
+    smoothScrollTo(targetPosition);
   }, []);
 
   // Parallax scroll for the product image
@@ -203,7 +205,7 @@ export default function Hero() {
           {/* Product image container */}
           <motion.div
             style={{ y: imageY, scale: imageScale }}
-            className="relative aspect-[4/5] w-full max-w-lg overflow-hidden rounded-3xl shadow-[0_25px_80px_rgba(0,0,0,0.08)]"
+            className="gpu-accelerated relative aspect-[4/5] w-full max-w-lg overflow-hidden rounded-3xl shadow-[0_25px_80px_rgba(0,0,0,0.08)]"
           >
             <Image
               src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&q=90&auto=format"

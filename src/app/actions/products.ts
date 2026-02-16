@@ -20,8 +20,8 @@ export async function getProductsAction(
   limit: number = 8,
   filters: ProductsFilter = {}
 ): Promise<ProductsResponse> {
-  // Simulate network delay for realistic loading effect
-  await new Promise((resolve) => setTimeout(resolve, 800));
+  // Simulate network delay for realistic loading effect (2000ms for Skeleton dev testing)
+  await new Promise((resolve) => setTimeout(resolve, 2000));
 
   let filtered = [...mockProducts];
 

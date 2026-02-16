@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Minus, Plus, ShoppingBag, ArrowLeft, ShieldCheck, Truck } from "lucide-react";
@@ -11,11 +11,19 @@ import Link from "next/link";
 import Navbar from "./Navbar";
 import { shimmer, toBase64 } from "@/lib/shimmer";
 import { PEARL_COLORS } from "@/constants/product";
+import { ProductGridSkeleton } from "@/components/luxury/ProductCardSkeleton";
 
 export default function ProductView({ product }: { product: Product }) {
   const [selectedImage, setSelectedImage] = useState(product.images[0]);
   const [quantity, setQuantity] = useState(1);
+  const [isLoadingRelated, setIsLoadingRelated] = useState(true);
  const { addItem, setIsOpen } = useCart();
+
+  // Simulate loading for related products skeleton demo
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoadingRelated(false), 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleAddToCart = () => {
     addItem({
@@ -238,15 +246,23 @@ export default function ProductView({ product }: { product: Product }) {
             </div>
 
             <motion.div
-              initial={{ opacity: 0, y: 40 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-80px" }}
+              viewport={{ once: true, amount: 0.1 }}
               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4"
             >
-              {relatedProducts.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
+              {isLoadingRelated ? (
+                <ProductGridSkeleton
+                  count={4}
+                  className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4"
+                />
+              ) : (
+                <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+                  {relatedProducts.map((p) => (
+                    <ProductCard key={p.id} product={p} />
+                  ))}
+                </div>
+              )}
             </motion.div>
           </section>
         )}

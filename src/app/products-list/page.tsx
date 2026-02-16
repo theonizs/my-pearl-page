@@ -15,6 +15,7 @@ import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
 import { type Product } from "@/data/products";
 import { getProductsAction } from "@/app/actions/products";
 import ProductCard from "@/components/luxury/ProductCard";
+import { ProductGridSkeleton } from "@/components/luxury/ProductCardSkeleton";
 import Navbar from "@/components/luxury/Navbar";
 
 // ---------------------------------------------------------------------------
@@ -197,19 +198,7 @@ function ProductsSkeleton() {
 
           {/* Grid skeleton */}
           <div className="flex-1">
-            <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="overflow-hidden rounded-lg border border-gold/10 bg-[#FFFDF8]">
-                  <div className="aspect-[3/4] w-full animate-pulse bg-charcoal/5" />
-                  <div className="space-y-3 p-4">
-                    <div className="h-4 w-16 animate-pulse rounded bg-charcoal/5" />
-                    <div className="h-5 w-3/4 animate-pulse rounded bg-charcoal/5" />
-                    <div className="h-4 w-full animate-pulse rounded bg-charcoal/5" />
-                    <div className="h-4 w-20 animate-pulse rounded bg-charcoal/5" />
-                  </div>
-                </div>
-              ))}
-            </div>
+            <ProductGridSkeleton count={9} />
           </div>
         </div>
       </div>
@@ -220,27 +209,47 @@ function ProductsSkeleton() {
 // ---------------------------------------------------------------------------
 // Page Content (uses useSearchParams)
 // ---------------------------------------------------------------------------
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 function ProductsContent() {
   const searchParams = useSearchParams();
-  const initialCategory = searchParams.get("category");
-  
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // ── Helper: parse filter state from URLSearchParams ─────────────────
+ const parseFiltersFromURL = useCallback((): FilterState => {
+    const search = searchParams.get("search") || "";
+    
+    // แก้จุดนี้ครับ: เช็คว่ามี param หรือไม่ ถ้าไม่มีค่อยใช้ 100000
+    const maxPriceParam = searchParams.get("maxPrice");
+    const maxPrice = maxPriceParam !== null ? Number(maxPriceParam) : 100000;
+
+    const sortBy = (searchParams.get("sort") as SortOption) || "price-asc";
+
+    const collectionsParam = searchParams.get("collections");
+    const collections = collectionsParam
+      ? collectionsParam.split(",").filter((c) => ALL_CATEGORIES.includes(c))
+      : ALL_CATEGORIES;
+
+    const colorsParam = searchParams.get("colors");
+    const colors = colorsParam ? colorsParam.split(",") : INITIAL_COLORS;
+
+    return { search, maxPrice, collections, colors, sortBy };
+  }, [searchParams]);
+
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // ── State ─────────────────────────────────────────────────────────────
   const [products, setProducts] = useState<Product[]>([]);
   const [nextCursor, setNextCursor] = useState<number | null>(1);
-  const [isLoading, setIsLoading] = useState(false);
+  // Start true so skeleton shows immediately on first mount/new tab
+  const [isLoading, setIsLoading] = useState(true);
   const isLoadingRef = useRef(false);
 
-  const [filters, setFilters] = useState<FilterState>({
-    search: "",
-    maxPrice: 100000,
-    collections: initialCategory ? [initialCategory] : ALL_CATEGORIES,
-    colors: INITIAL_COLORS,
-    sortBy: "price-asc",
-  });
+  const [filters, setFilters] = useState<FilterState>(parseFiltersFromURL);
+
+  // Guard flag: true when the state change came FROM URL (prevents loop)
+  const isSyncFromUrl = useRef(false);
 
   // Keep a ref to always have the latest filters without recreating callbacks
   const filtersRef = useRef(filters);
@@ -248,6 +257,64 @@ function ProductsContent() {
 
   const nextCursorRef = useRef(nextCursor);
   useEffect(() => { nextCursorRef.current = nextCursor; }, [nextCursor]);
+
+  // ── Sync URL → State (handles refresh, new tab, back/forward) ───────
+  useEffect(() => {
+    const fromURL = parseFiltersFromURL();
+    const current = filtersRef.current;
+
+    // Compare to avoid unnecessary updates
+    const isSame =
+      fromURL.search === current.search &&
+      fromURL.maxPrice === current.maxPrice &&
+      fromURL.sortBy === current.sortBy &&
+      fromURL.collections.length === current.collections.length &&
+      fromURL.collections.every((c) => current.collections.includes(c)) &&
+      fromURL.colors.length === current.colors.length &&
+      fromURL.colors.every((c) => current.colors.includes(c));
+
+    if (!isSame) {
+      isSyncFromUrl.current = true;
+      setFilters(fromURL);
+    }
+  }, [parseFiltersFromURL]);
+
+  // ── Sync State → URL (client-side, no page reload) ──────────────────
+  const isInitialSync = useRef(true);
+  useEffect(() => {
+    if (isInitialSync.current) {
+      isInitialSync.current = false;
+      return;
+    }
+    if (isSyncFromUrl.current) {
+      isSyncFromUrl.current = false;
+      return;
+    }
+
+    const params = new URLSearchParams();
+    if (filters.search) params.set("search", filters.search);
+    
+    // เงื่อนไขนี้ยังใช้ได้ครับ เพราะ 0 < 100000 เป็น true
+    if (filters.maxPrice < 100000) {
+      params.set("maxPrice", String(filters.maxPrice));
+    }
+    
+    if (filters.sortBy !== "price-asc") params.set("sort", filters.sortBy);
+
+    const allSelected =
+      filters.collections.length === ALL_CATEGORIES.length &&
+      ALL_CATEGORIES.every((c) => filters.collections.includes(c));
+    
+    if (!allSelected && filters.collections.length > 0) {
+      params.set("collections", filters.collections.join(","));
+    }
+    if (filters.colors.length > 0) {
+      params.set("colors", filters.colors.join(","));
+    }
+
+    const qs = params.toString();
+    router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
+  }, [filters, router, pathname]);
 
   const { ref, inView } = useInView();
 
@@ -311,6 +378,9 @@ function ProductsContent() {
 
   // ── Debounced reset fetch (fires 500ms after last filter change) ──────
   const debouncedResetFetch = useDebouncedCallback(() => {
+    // Note: Do NOT set isLoadingRef.current = true here, or fetchProducts will block itself!
+    // We only set visual loading state to keep UI correct.
+    setIsLoading(true);
     setProducts([]);
     setNextCursor(1);
     fetchProducts(1, true);
@@ -327,6 +397,8 @@ function ProductsContent() {
       fetchProducts(1, true);
       return;
     }
+    // Mark loading immediately for UI (but don't lock ref)
+    setIsLoading(true);
     debouncedResetFetch();
   }, [
     filters.search,
@@ -338,12 +410,13 @@ function ProductsContent() {
     fetchProducts,
   ]);
 
-  // 2. Infinite Scroll (fires immediately, not debounced)
+  // 2. Infinite Scroll
   useEffect(() => {
-    if (inView && !isLoadingRef.current && nextCursorRef.current && products.length > 0) {
+    // Also check !isLoading to ensure we don't trigger scroll fetch while a reset is pending/active
+    if (inView && !isLoadingRef.current && !isLoading && nextCursorRef.current && products.length > 0) {
       fetchProducts(nextCursorRef.current, false);
     }
-  }, [inView, products.length, fetchProducts]);
+  }, [inView, products.length, fetchProducts, isLoading]);
 
   // ── Render ────────────────────────────────────────────────────────────
   return (
@@ -428,7 +501,20 @@ function ProductsContent() {
               className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3"
             >
               <AnimatePresence>
-                {products.map((product) => (
+                {/* Initial Load: Show Skeleton explicitly if no products yet */}
+                {isLoading && products.length === 0 ? (
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <motion.div
+                      key={`skeleton-${i}`}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                    >
+                      <ProductGridSkeleton count={1} className="contents" />
+                    </motion.div>
+                  ))
+                ) : (
+                  products.map((product) => (
                     <motion.div
                       layout
                       key={product.id}
@@ -439,15 +525,17 @@ function ProductsContent() {
                     >
                       <ProductCard product={product} />
                     </motion.div>
-                  ))}
+                  ))
+                )}
               </AnimatePresence>
             </motion.div>
 
-            {/* Empty State */}
-            {!isLoading && products.length === 0 && (
+            {/* Empty State — only show when truly done loading */}
+            {!isLoading && !isLoadingRef.current && products.length === 0 && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
+                transition={{ delay: 0.15, duration: 0.3 }}
                 className="mt-12 flex h-64 flex-col items-center justify-center rounded-2xl border border-dashed border-charcoal/10 bg-white/30 text-center"
               >
                 <SlidersHorizontal className="mb-4 h-8 w-8 text-charcoal/20" />
