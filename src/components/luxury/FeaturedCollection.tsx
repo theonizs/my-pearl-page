@@ -12,7 +12,7 @@ import { categories, Category } from "@/data/categories";
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 const sectionFade = {
-  hidden: { opacity: 0, y: 40 },
+  hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
     y: 0,
@@ -28,7 +28,7 @@ const gridStagger = {
 };
 
 const cardFade = {
-  hidden: { opacity: 0, y: 30 },
+  hidden: { opacity: 0, y: 15 },
   visible: {
     opacity: 1,
     y: 0,
@@ -48,7 +48,7 @@ function CategoryCard({ category }: { category: Category }) {
     >
       <Link href={`/products-list?category=${category.title}`}>
         {/* ── Image Container ──────────────────────────────────────── */}
-        <div className="relative aspect-[4/5] lg:aspect-[3/4] overflow-hidden rounded-2xl bg-pearl-deep">
+        <div className="gpu-accelerated relative aspect-[4/5] lg:aspect-[3/4] overflow-hidden rounded-2xl bg-pearl-deep">
           {/* Image with hover scale (desktop only via motion) */}
           <motion.div
             className="relative h-full w-full"
@@ -136,7 +136,7 @@ export default function FeaturedCollection() {
           variants={sectionFade}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-80px" }}
+          viewport={{ once: true, amount: 0.1 }}
           className="mb-16 text-center"
         >
           <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.4em] text-gold">
@@ -155,7 +155,7 @@ export default function FeaturedCollection() {
           variants={gridStagger}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-60px" }}
+          viewport={{ once: true, amount: 0.1 }}
           className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4 lg:gap-6"
         >
           {categories.map((category) => (

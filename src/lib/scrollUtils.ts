@@ -1,100 +1,28 @@
-export function easeOutQuint(t: number, b: number, c: number, d: number): number {
-  t /= d;
-  t--;
-  return c * (Math.pow(t, 5) + 1) + b;
-}
+/**
+ * Native CSS-first smooth scroll utility.
+ * Uses window.scrollTo({ behavior: 'smooth' }) for browser-native
+ * smooth scrolling instead of JS requestAnimationFrame loops.
+ *
+ * Includes heuristics to prevent "instant jump" issues:
+ * 1. Reduced Motion check for accessibility
+ * 2. setTimeout(..., 0) to allow event loop to clear
+ */
 
-const preventDefault = (e: Event) => {
-  e.preventDefault();
-};
-
-const keys: { [key: string]: number } = {
-  ArrowLeft: 1,
-  ArrowRight: 1,
-  ArrowUp: 1,
-  ArrowDown: 1,
-  Space: 1,
-  PageUp: 1,
-  PageDown: 1,
-  Home: 1,
-  End: 1,
-};
-
-const preventDefaultForScrollKeys = (e: KeyboardEvent) => {
-  if (keys[e.code]) {
-    preventDefault(e);
-    return false;
-  }
-};
-
-let isLocked = false;
-
-// Modern Chrome requires { passive: false } when adding event
-let supportsPassive = false;
-try {
-  // @ts-ignore
-  window.addEventListener(
-    "test",
-    null,
-    Object.defineProperty({}, "passive", {
-      get: function () {
-        supportsPassive = true;
-      },
-    })
-  );
-} catch (e) {}
-
-const wheelOpt = supportsPassive ? { passive: false } : false;
-const wheelEvent =
-  typeof document !== "undefined" && "onwheel" in document.createElement("div")
-    ? "wheel"
-    : "mousewheel";
-
-export function lockScroll() {
-  if (typeof window === "undefined" || isLocked) return;
-  isLocked = true;
-  window.addEventListener("DOMMouseScroll", preventDefault, false); // older FF
-  window.addEventListener(wheelEvent, preventDefault, wheelOpt); // modern desktop
-  window.addEventListener("touchmove", preventDefault, wheelOpt); // mobile
-  window.addEventListener("keydown", preventDefaultForScrollKeys, false);
-}
-
-export function unlockScroll() {
-  if (typeof window === "undefined" || !isLocked) return;
-  isLocked = false;
-  window.removeEventListener("DOMMouseScroll", preventDefault, false);
-  // @ts-ignore
-  window.removeEventListener(wheelEvent, preventDefault, wheelOpt);
-  // @ts-ignore
-  window.removeEventListener("touchmove", preventDefault, wheelOpt);
-  window.removeEventListener("keydown", preventDefaultForScrollKeys, false);
-}
-
-export function smoothScrollTo(targetY: number, duration: number = 1000) {
+export function smoothScrollTo(targetY: number) {
   if (typeof window === "undefined") return;
 
-  // 1. Lock user interaction
-  lockScroll();
+  // 1. Accessibility Check
+  const prefersReducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  ).matches;
 
-  const startY = window.pageYOffset;
-  const distance = targetY - startY;
-  let startTime: number | null = null;
-
-  function animation(currentTime: number) {
-    if (startTime === null) startTime = currentTime;
-    const timeElapsed = currentTime - startTime;
-
-    const run = easeOutQuint(timeElapsed, startY, distance, duration);
-
-    window.scrollTo(0, run);
-
-    if (timeElapsed < duration) {
-      requestAnimationFrame(animation);
-    } else {
-      // 2. Unlock when done
-      unlockScroll();
-    }
-  }
-
-  requestAnimationFrame(animation);
+  // 2. Event Loop Delay Hack
+  // Wraps the scroll in a timeout to ensure any previous events (like clicks)
+  // have fully propagated and the browser is ready to accept a new scroll command.
+  setTimeout(() => {
+    window.scrollTo({
+      top: targetY,
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+    });
+  }, 0);
 }

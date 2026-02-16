@@ -18,3 +18,9 @@
     2. ตรวจสอบความถูกต้องของ TypeScript Types และ Syntax
     3. หากเป็นปัญหาเรื่อง Dependency ให้ลอง `pnpm install` ใหม่
     4. หากแก้แล้วยังไม่ผ่าน ให้สรุปปัญหาและแนวทางที่ลองไปแล้วให้ผู้ใช้ทราบก่อนลองวิธีใหม่
+
+## Environment Constraints
+- **Package Manager:** Strictly use `pnpm`. Do NOT use `npm` or `yarn`.
+- **Framework:** Next.js 15 (App Router).
+- **Styling:** Tailwind CSS.
+- **Animations:** Framer Motion (Optimize for Mobile Performance).

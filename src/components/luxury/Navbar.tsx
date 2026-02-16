@@ -37,6 +37,8 @@ export default function Navbar() {
     (e: React.MouseEvent, sectionId: string) => {
       e.preventDefault();
       e.stopPropagation();
+      // Strict: Stop immediate propagation to prevent other listeners
+      if (e.nativeEvent) e.nativeEvent.stopImmediatePropagation();
 
       if (typeof window === "undefined") return;
 
@@ -47,7 +49,7 @@ export default function Navbar() {
       const targetPosition =
         target.getBoundingClientRect().top + window.pageYOffset - navHeight;
 
-      smoothScrollTo(targetPosition, 1000);
+      smoothScrollTo(targetPosition);
       setMobileOpen(false);
     },
     [setMobileOpen],

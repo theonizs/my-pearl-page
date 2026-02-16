@@ -10,7 +10,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 50 },
+  hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
     y: 0,
@@ -19,7 +19,7 @@ const fadeUp = {
 };
 
 const fadeLeft = {
-  hidden: { opacity: 0, x: -60 },
+  hidden: { opacity: 0, x: -30 },
   visible: {
     opacity: 1,
     x: 0,
@@ -69,7 +69,7 @@ export default function OurStory() {
           variants={fadeLeft}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, amount: 0.1 }}
           ref={imageRef}
           className="relative"
         >
@@ -77,7 +77,7 @@ export default function OurStory() {
           <div className="relative aspect-[4/5] overflow-hidden rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.08)]">
             <motion.div
               style={{ y: imageY }}
-              className="absolute inset-[-10%] h-[120%] w-[120%]"
+              className="gpu-accelerated absolute inset-[-10%] h-[120%] w-[120%]"
             >
               <Image
                 src="https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=800&q=85&auto=format"
@@ -117,7 +117,7 @@ export default function OurStory() {
           variants={stagger}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-80px" }}
+          viewport={{ once: true, amount: 0.1 }}
           className="flex flex-col"
         >
           {/* Eyebrow */}

@@ -12,7 +12,7 @@ import ProductCard from "./ProductCard";
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 const sectionFade = {
-  hidden: { opacity: 0, y: 40 },
+  hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
     y: 0,
@@ -57,7 +57,7 @@ export default function ProductList({
           variants={sectionFade}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-80px" }}
+          viewport={{ once: true, amount: 0.1 }}
           className="mb-16 text-center relative"
         >
           <div className="flex items-center justify-center relative">
@@ -85,7 +85,7 @@ export default function ProductList({
           variants={gridStagger}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-60px" }}
+          viewport={{ once: true, amount: 0.1 }}
           className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4"
         >
           {displayProducts.map((product) => (

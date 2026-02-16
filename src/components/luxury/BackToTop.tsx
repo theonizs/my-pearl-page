@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUp } from "lucide-react";
-
 import { smoothScrollTo } from "@/lib/scrollUtils";
 
 export default function BackToTop() {
@@ -20,9 +19,9 @@ export default function BackToTop() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Custom animated scroll to top with locking
+  // Native smooth scroll to top
   const scrollToTop = useCallback(() => {
-    smoothScrollTo(0, 1000);
+    smoothScrollTo(0);
   }, []);
 
   return (

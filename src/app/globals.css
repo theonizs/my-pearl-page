@@ -72,17 +72,35 @@
 }
 
 /* ─── Base Styles ──────────────────────────────────────────────────────────── */
+html {
+  /* scroll-behavior: smooth !important; <-- Commented out to use JS-only scroll */
+  overflow-x: hidden;
+}
+
+/* Hardware Sync: Ensure sections have correct scroll offset */
+section, [id] {
+  scroll-margin-top: 100px;
+}
+
 body {
   background-color: var(--color-pearl);
   color: var(--color-charcoal);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 ::selection {
   background-color: var(--color-gold);
   color: white;
+}
+
+/* ─── GPU Acceleration Hint ────────────────────────────────────────────────── */
+.gpu-accelerated {
+  will-change: transform;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 
 /* ─── Shadcn Light / Dark tokens ───────────────────────────────────────────── */
